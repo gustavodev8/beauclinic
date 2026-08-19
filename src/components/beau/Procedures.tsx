@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Reveal, MaskImage } from "./Reveal";
-import { TRINKS_URL } from "@/lib/beau";
+import { TRINKS_URL, openBooking } from "@/lib/beau";
 import brows from "@/assets/proc-sobrancelha.jpg";
 import lips from "@/assets/proc-labial.jpg";
 import design from "@/assets/proc-design.jpg";
@@ -78,8 +78,10 @@ function ProcedureBlock({ item }: { item: Procedure }) {
         </p>
         <a
           href={item.href}
-          target="_blank"
-          rel="noreferrer"
+          onClick={(event) => {
+            event.preventDefault();
+            openBooking();
+          }}
           className="mt-5 inline-flex min-h-[48px] items-center gap-3 border-b border-foreground/30 pb-1 eyebrow !text-foreground"
         >
           Conhecer procedimento →

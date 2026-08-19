@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import heroImg from "@/assets/hero.jpg";
 import { TRINKS_URL } from "@/lib/beau";
+import { openBooking } from "@/lib/beau";
 
 export function Hero() {
   const ref = useRef<HTMLDivElement>(null);
@@ -81,8 +82,10 @@ export function Hero() {
         >
           <a
             href={TRINKS_URL}
-            target="_blank"
-            rel="noreferrer"
+            onClick={(event) => {
+              event.preventDefault();
+              openBooking();
+            }}
             className="inline-flex h-13 min-h-[52px] w-full items-center justify-between bg-primary px-6 text-primary-foreground sm:w-auto sm:gap-10"
           >
             <span className="eyebrow !text-primary-foreground">Agendar horário</span>
