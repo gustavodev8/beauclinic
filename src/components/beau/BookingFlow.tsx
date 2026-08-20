@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { procedures } from "@/lib/beau";
 
@@ -11,6 +11,8 @@ const saturdayTimes = ["08:00", "09:30", "11:00", "13:30", "15:00"];
 export function BookingFlow() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("procedure");
+  const [direction, setDirection] = useState(1);
+  const reduceMotion = useReducedMotion();
   const [selection, setSelection] = useState({
     procedure: "",
     professional: "",
@@ -21,6 +23,7 @@ export function BookingFlow() {
   useEffect(() => {
     const openBooking = () => {
       setStep("procedure");
+      setDirection(1);
       setSelection({ procedure: "", professional: "", date: "", time: "" });
       setOpen(true);
     };
@@ -37,7 +40,19 @@ export function BookingFlow() {
 
   const choose = (key: keyof typeof selection, value: string, next: Step) => {
     setSelection((current) => ({ ...current, [key]: value }));
+    setDirection(1);
     setStep(next);
+  };
+
+  const goBack = () => {
+    setDirection(-1);
+    setStep(
+      step === "professional"
+        ? "procedure"
+        : step === "date"
+          ? "professional"
+          : "date",
+    );
   };
 
   const titles: Record<Step, string> = {
@@ -65,10 +80,11 @@ export function BookingFlow() {
             aria-modal="true"
             aria-labelledby="booking-title"
             className="max-h-[92svh] w-full overflow-y-auto bg-background px-5 pb-8 pt-5 sm:max-w-lg sm:px-8"
+            layout
             initial={{ y: 80 }}
             animate={{ y: 0 }}
             exit={{ y: 80 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: reduceMotion ? 0 : 0.6, ease: [0.16, 1, 0.3, 1] }}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -85,8 +101,25 @@ export function BookingFlow() {
             )}
 
             <AnimatePresence mode="wait">
-              <motion.div key={step} initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.25 }}>
+              <motion.div
+                key={step}
+                custom={direction}
+                variants={screenVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  duration: reduceMotion ? 0 : 0.48,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                className="min-h-[490px]"
+              >
                 <p className="mt-8 text-xs uppercase tracking-[0.18em] text-muted-foreground">{step === "done" ? "Tudo certo" : `Etapa ${stepNumber} de 4`}</p>
+                {step !== "procedure" && step !== "done" && (
+                  <button type="button" onClick={goBack} className="mt-4 inline-flex min-h-[44px] items-center gap-2 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                    <span aria-hidden>←</span> Voltar
+                  </button>
+                )}
                 <h2 id="booking-title" className="display mt-3 text-[2.25rem]">{titles[step]}</h2>
 
                 {step === "procedure" && <OptionList options={procedures.map((item) => item.title.join(" "))} onSelect={(value) => choose("procedure", value, "professional")} />}
@@ -122,6 +155,24 @@ export function BookingFlow() {
     </AnimatePresence>
   );
 }
+
+const screenVariants = {
+  enter: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? 12 : -12,
+    filter: "blur(2px)",
+  }),
+  center: {
+    opacity: 1,
+    x: 0,
+    filter: "blur(0px)",
+  },
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? -12 : 12,
+    filter: "blur(2px)",
+  }),
+};
 
 function OptionList({ options, onSelect }: { options: string[]; onSelect: (value: string) => void }) {
   return (
