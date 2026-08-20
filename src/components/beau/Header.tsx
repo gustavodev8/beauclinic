@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { INSTAGRAM_URL, TRINKS_URL, WHATSAPP_URL } from "@/lib/beau";
+import { INSTAGRAM_URL, TRINKS_URL, WHATSAPP_URL, openBooking } from "@/lib/beau";
 
 const links = [
   { label: "Essência", href: "#essencia" },
@@ -107,7 +107,11 @@ export function Header() {
             <div className="space-y-6">
               <a
                 href={TRINKS_URL}
-                onClick={() => setOpen(false)}
+                onClick={(event) => {
+                  event.preventDefault();
+                  setOpen(false);
+                  openBooking();
+                }}
                 className="flex h-14 items-center justify-center bg-primary text-primary-foreground eyebrow !text-primary-foreground"
               >
                 Agendar horário →

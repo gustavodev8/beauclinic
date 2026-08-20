@@ -1,5 +1,5 @@
 import { Reveal, MaskImage } from "./Reveal";
-import { INSTAGRAM_URL, MAPS_URL, TRINKS_URL, WHATSAPP_URL } from "@/lib/beau";
+import { INSTAGRAM_URL, MAPS_URL, TRINKS_URL, WHATSAPP_URL, openBooking } from "@/lib/beau";
 import essence from "@/assets/essence.jpg";
 import founder from "@/assets/founder.jpg";
 import result2 from "@/assets/result-2.jpg";
@@ -322,6 +322,10 @@ export function FinalCTA() {
           </p>
           <a
             href={TRINKS_URL}
+            onClick={(event) => {
+              event.preventDefault();
+              openBooking();
+            }}
             className="mt-9 flex min-h-[56px] items-center justify-between bg-background px-6 text-foreground"
           >
             <span className="eyebrow !text-foreground">Agendar agora</span>

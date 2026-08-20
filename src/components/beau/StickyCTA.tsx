@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { TRINKS_URL } from "@/lib/beau";
+import { TRINKS_URL, openBooking } from "@/lib/beau";
 
 export function StickyCTA() {
   const [show, setShow] = useState(false);
@@ -26,6 +26,10 @@ export function StickyCTA() {
           <div className="edge-x py-3">
             <a
               href={TRINKS_URL}
+              onClick={(event) => {
+                event.preventDefault();
+                openBooking();
+              }}
               className="flex h-13 min-h-[52px] items-center justify-between bg-primary px-6"
             >
               <span className="eyebrow !text-primary-foreground">Agendar horário</span>
