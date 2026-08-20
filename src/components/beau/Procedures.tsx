@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Reveal, MaskImage } from "./Reveal";
-import { TRINKS_URL, openBooking } from "@/lib/beau";
+import { TRINKS_URL } from "@/lib/beau";
 import brows from "@/assets/proc-sobrancelha.jpg";
 import lips from "@/assets/proc-labial.jpg";
 import design from "@/assets/proc-design.jpg";
@@ -78,10 +78,6 @@ function ProcedureBlock({ item }: { item: Procedure }) {
         </p>
         <a
           href={item.href}
-          onClick={(event) => {
-            event.preventDefault();
-            openBooking();
-          }}
           className="mt-5 inline-flex min-h-[48px] items-center gap-3 border-b border-foreground/30 pb-1 eyebrow !text-foreground"
         >
           Conhecer procedimento →
@@ -109,11 +105,12 @@ export function Procedures() {
         </Reveal>
       </div>
 
-      <div className="no-scrollbar mt-8 flex gap-2 overflow-x-auto px-[22px] pb-1">
+      <div className="no-scrollbar mx-auto mt-8 flex w-full max-w-[1120px] gap-2 overflow-x-auto px-[clamp(22px,5vw,48px)] pb-1">
         {filters.map((f) => (
           <button
             key={f}
             onClick={() => setActive(f)}
+            aria-pressed={active === f}
             className={`shrink-0 whitespace-nowrap border px-4 py-2.5 text-[0.7rem] uppercase tracking-[0.18em] transition-colors ${
               active === f
                 ? "border-primary bg-primary text-primary-foreground"

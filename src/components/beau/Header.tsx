@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { INSTAGRAM_URL, TRINKS_URL, WHATSAPP_URL, openBooking } from "@/lib/beau";
+import { INSTAGRAM_URL, TRINKS_URL, WHATSAPP_URL } from "@/lib/beau";
 
 const links = [
   { label: "Essência", href: "#essencia" },
@@ -28,6 +28,14 @@ export function Header() {
     };
   }, [open]);
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   return (
     <>
       <header
@@ -46,6 +54,8 @@ export function Header() {
           </a>
           <button
             aria-label={open ? "Fechar menu" : "Abrir menu"}
+            aria-expanded={open}
+            aria-controls="mobile-navigation"
             onClick={() => setOpen((v) => !v)}
             className="-mr-2 flex h-12 w-12 items-center justify-center"
           >
@@ -72,6 +82,8 @@ export function Header() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.35 }}
+            id="mobile-navigation"
+            aria-label="Navegação principal"
             className="fixed inset-0 z-40 flex flex-col justify-between bg-background pt-24 pb-10 edge-x"
           >
             <ul className="space-y-1">
@@ -95,11 +107,7 @@ export function Header() {
             <div className="space-y-6">
               <a
                 href={TRINKS_URL}
-                onClick={(event) => {
-                  event.preventDefault();
-                  setOpen(false);
-                  openBooking();
-                }}
+                onClick={() => setOpen(false)}
                 className="flex h-14 items-center justify-center bg-primary text-primary-foreground eyebrow !text-primary-foreground"
               >
                 Agendar horário →

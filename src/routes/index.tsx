@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Header } from "@/components/beau/Header";
 import { Hero } from "@/components/beau/Hero";
 import { StickyCTA } from "@/components/beau/StickyCTA";
-import { BookingFlow } from "@/components/beau/BookingFlow";
 import { Procedures } from "@/components/beau/Procedures";
 import {
   Positioning,
@@ -54,7 +53,6 @@ function Index() {
       <FinalCTA />
       <Footer />
       <StickyCTA />
-      <BookingFlow />
     </main>
   );
 }

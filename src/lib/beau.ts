@@ -10,7 +10,3 @@ export const procedures = [
   { title: ["Sobrancelhas"] },
   { title: ["Estética facial"] },
 ];
-
-export function openBooking() {
-  window.dispatchEvent(new CustomEvent("beau:open-booking"));
-}
