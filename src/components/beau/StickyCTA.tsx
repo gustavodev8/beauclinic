@@ -32,7 +32,7 @@ export function StickyCTA() {
               }}
               className="flex h-13 min-h-[52px] items-center justify-between bg-primary px-6"
             >
-              <span className="eyebrow !text-primary-foreground">Agendar horário</span>
+              <span className="eyebrow !text-primary-foreground">Ver demonstração</span>
               <span aria-hidden className="text-primary-foreground">
                 →
               </span>

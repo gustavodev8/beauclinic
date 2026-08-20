@@ -84,7 +84,7 @@ function ProcedureBlock({ item }: { item: Procedure }) {
           }}
           className="mt-5 inline-flex min-h-[48px] items-center gap-3 border-b border-foreground/30 pb-1 eyebrow !text-foreground"
         >
-          Conhecer procedimento →
+          Simular este agendamento →
         </a>
       </Reveal>
     </article>

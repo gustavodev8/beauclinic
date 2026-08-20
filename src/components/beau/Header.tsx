@@ -114,7 +114,7 @@ export function Header() {
                 }}
                 className="flex h-14 items-center justify-center bg-primary text-primary-foreground eyebrow !text-primary-foreground"
               >
-                Agendar horário →
+                Ver demonstração →
               </a>
               <div className="flex gap-6 eyebrow">
                 <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">

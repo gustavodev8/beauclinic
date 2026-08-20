@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
-import { procedures } from "@/lib/beau";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { procedures, TRINKS_URL } from "@/lib/beau";
 
 type Step = "procedure" | "professional" | "date" | "time" | "done";
 
@@ -13,6 +13,9 @@ export function BookingFlow() {
   const [step, setStep] = useState<Step>("procedure");
   const [direction, setDirection] = useState(1);
   const reduceMotion = useReducedMotion();
+  const dialogRef = useRef<HTMLElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
   const [selection, setSelection] = useState({
     procedure: "",
     professional: "",
@@ -22,6 +25,7 @@ export function BookingFlow() {
 
   useEffect(() => {
     const openBooking = () => {
+      triggerRef.current = document.activeElement as HTMLElement | null;
       setStep("procedure");
       setDirection(1);
       setSelection({ procedure: "", professional: "", date: "", time: "" });
@@ -38,8 +42,57 @@ export function BookingFlow() {
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const focusFrame = window.requestAnimationFrame(() => closeButtonRef.current?.focus());
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          "button, a[href], [tabindex]:not([tabindex='-1'])",
+        ),
+      ).filter((element) => !element.hasAttribute("disabled"));
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      document.removeEventListener("keydown", onKeyDown);
+      window.requestAnimationFrame(() => triggerRef.current?.focus());
+    };
+  }, [open]);
+
   const choose = (key: keyof typeof selection, value: string, next: Step) => {
-    setSelection((current) => ({ ...current, [key]: value }));
+    setSelection((current) => {
+      if (key === "procedure") {
+        return { procedure: value, professional: "", date: "", time: "" };
+      }
+      if (key === "professional") {
+        return { ...current, professional: value, date: "", time: "" };
+      }
+      if (key === "date") {
+        return { ...current, date: value, time: "" };
+      }
+      return { ...current, [key]: value };
+    });
     setDirection(1);
     setStep(next);
   };
@@ -60,7 +113,7 @@ export function BookingFlow() {
     professional: "Escolha sua profissional",
     date: "Qual dia funciona para você?",
     time: "Escolha um horário",
-    done: "Seu pedido foi recebido",
+    done: "Simulação concluída",
   };
 
   const stepNumber = { procedure: 1, professional: 2, date: 3, time: 4, done: 4 }[step];
@@ -76,6 +129,7 @@ export function BookingFlow() {
           onClick={() => setOpen(false)}
         >
           <motion.section
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="booking-title"
@@ -89,7 +143,7 @@ export function BookingFlow() {
           >
             <div className="flex items-center justify-between">
               <p className="eyebrow">Agendamento Beau · protótipo</p>
-              <button onClick={() => setOpen(false)} className="flex h-11 w-11 items-center justify-center text-xl" aria-label="Fechar agendamento">
+              <button ref={closeButtonRef} onClick={() => setOpen(false)} className="flex h-11 w-11 items-center justify-center text-xl" aria-label="Fechar demonstração de agendamento">
                 ×
               </button>
             </div>
@@ -120,9 +174,16 @@ export function BookingFlow() {
                     <span aria-hidden>←</span> Voltar
                   </button>
                 )}
-                <h2 id="booking-title" className="display mt-3 text-[2.25rem]">{titles[step]}</h2>
+                <h2 id="booking-title" aria-live="polite" className="display mt-3 text-[2.25rem]">{titles[step]}</h2>
 
-                {step === "procedure" && <OptionList options={procedures.map((item) => item.title.join(" "))} onSelect={(value) => choose("procedure", value, "professional")} />}
+                {step === "procedure" && (
+                  <>
+                    <p className="mt-4 max-w-[38ch] text-sm leading-relaxed text-muted-foreground">
+                      Demonstração visual com horários ilustrativos. Na versão final, a confirmação será feita no Trinks.
+                    </p>
+                    <OptionList options={procedures.map((item) => item.title.join(" "))} onSelect={(value) => choose("procedure", value, "professional")} />
+                  </>
+                )}
                 {step === "professional" && <OptionList options={professionals} onSelect={(value) => choose("professional", value, "date")} />}
                 {step === "date" && <CalendarPicker onSelect={(value) => choose("date", value, "time")} />}
                 {step === "time" && (
@@ -136,14 +197,17 @@ export function BookingFlow() {
                 )}
                 {step === "done" && (
                   <div className="mt-8 border-y border-border py-6">
-                    <p className="text-sm leading-relaxed text-muted-foreground">Este é um protótipo visual do fluxo de agendamento da Beau.</p>
+                    <p className="text-sm leading-relaxed text-muted-foreground">Esta é uma prévia demonstrativa do fluxo de agendamento da Beau. Nenhum horário foi reservado.</p>
                     <dl className="mt-6 space-y-3 text-sm">
                       <Summary label="Procedimento" value={selection.procedure} />
                       <Summary label="Profissional" value={selection.professional} />
                       <Summary label="Data e horário" value={`${formatDateKey(selection.date)} · ${selection.time}`} />
                     </dl>
-                    <button onClick={() => setOpen(false)} className="mt-7 flex min-h-[52px] w-full items-center justify-between bg-primary px-5 text-left eyebrow !text-primary-foreground">
-                      Fechar protótipo <span>→</span>
+                    <a href={TRINKS_URL} target="_blank" rel="noreferrer" className="mt-7 flex min-h-[52px] w-full items-center justify-between bg-primary px-5 text-left eyebrow !text-primary-foreground">
+                      Acessar agendamento real no Trinks <span>↗</span>
+                    </a>
+                    <button onClick={() => setOpen(false)} className="mt-3 flex min-h-[48px] w-full items-center justify-between border-b border-border px-1 text-left eyebrow !text-foreground">
+                      Voltar para a página <span>↓</span>
                     </button>
                   </div>
                 )}
@@ -197,9 +261,9 @@ function CalendarPicker({ onSelect }: { onSelect: (value: string) => void }) {
     if (index < leadingDays) return null;
     return new Date(month.getFullYear(), month.getMonth(), index - leadingDays + 1);
   });
-  const lastAllowedMonth = new Date(today.getFullYear(), today.getMonth() + 2, 1);
   const availableUntil = new Date(today);
   availableUntil.setDate(availableUntil.getDate() + 45);
+  const lastAllowedMonth = new Date(availableUntil.getFullYear(), availableUntil.getMonth(), 1);
 
   const isAvailable = (date: Date) => {
     const isSunday = date.getDay() === 0;
@@ -245,8 +309,8 @@ function CalendarPicker({ onSelect }: { onSelect: (value: string) => void }) {
               type="button"
               disabled={!available}
               onClick={() => onSelect(formatKey(date))}
-              className={`flex aspect-square items-center justify-center text-sm transition-colors ${available ? "bg-secondary/55 text-foreground hover:bg-primary hover:text-primary-foreground" : "text-muted-foreground/30 line-through"}`}
-              aria-label={formatDate(date)}
+              className={`flex aspect-square items-center justify-center text-sm transition-colors ${available ? "bg-secondary/55 text-foreground hover:bg-primary hover:text-primary-foreground" : "text-muted-foreground/55"}`}
+              aria-label={`${formatDate(date)}${available ? "" : " — indisponível"}`}
             >
               {date.getDate()}
             </button>
