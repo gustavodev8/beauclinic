@@ -328,7 +328,7 @@ export function FinalCTA() {
             }}
             className="mt-9 flex min-h-[56px] items-center justify-between bg-background px-6 text-foreground"
           >
-            <span className="eyebrow !text-foreground">Ver demonstração</span>
+            <span className="eyebrow !text-foreground">Agendar agora</span>
             <span aria-hidden>→</span>
           </a>
           <p className="mt-4 text-xs text-primary-foreground/70">
