@@ -1,12 +1,12 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { procedures } from "@/lib/beau";
 
 type Step = "procedure" | "professional" | "date" | "time" | "done";
 
 const professionals = ["Beatriz Borges", "Equipe Beau"];
-const dates = ["Hoje, 19 ago", "Amanhã, 20 ago", "Quinta, 21 ago"];
-const times = ["09:00", "10:30", "14:00", "16:30"];
+const weekdayTimes = ["08:00", "09:30", "11:00", "14:00", "16:30", "18:00"];
+const saturdayTimes = ["08:00", "09:30", "11:00", "13:30", "15:00"];
 
 export function BookingFlow() {
   const [open, setOpen] = useState(false);
@@ -91,10 +91,13 @@ export function BookingFlow() {
 
                 {step === "procedure" && <OptionList options={procedures.map((item) => item.title.join(" "))} onSelect={(value) => choose("procedure", value, "professional")} />}
                 {step === "professional" && <OptionList options={professionals} onSelect={(value) => choose("professional", value, "date")} />}
-                {step === "date" && <OptionList options={dates} onSelect={(value) => choose("date", value, "time")} />}
+                {step === "date" && <CalendarPicker onSelect={(value) => choose("date", value, "time")} />}
                 {step === "time" && (
                   <>
-                    <OptionList options={times} onSelect={(value) => choose("time", value, "done")} />
+                    <OptionList
+                      options={isSaturday(selection.date) ? saturdayTimes : weekdayTimes}
+                      onSelect={(value) => choose("time", value, "done")}
+                    />
                     <p className="mt-5 text-xs leading-relaxed text-muted-foreground">Horários demonstrativos para apresentação. A disponibilidade real será conectada ao Trinks após a aprovação do projeto.</p>
                   </>
                 )}
@@ -104,7 +107,7 @@ export function BookingFlow() {
                     <dl className="mt-6 space-y-3 text-sm">
                       <Summary label="Procedimento" value={selection.procedure} />
                       <Summary label="Profissional" value={selection.professional} />
-                      <Summary label="Data e horário" value={`${selection.date} · ${selection.time}`} />
+                      <Summary label="Data e horário" value={`${formatDateKey(selection.date)} · ${selection.time}`} />
                     </dl>
                     <button onClick={() => setOpen(false)} className="mt-7 flex min-h-[52px] w-full items-center justify-between bg-primary px-5 text-left eyebrow !text-primary-foreground">
                       Fechar protótipo <span>→</span>
@@ -131,6 +134,105 @@ function OptionList({ options, onSelect }: { options: string[]; onSelect: (value
       ))}
     </div>
   );
+}
+
+function CalendarPicker({ onSelect }: { onSelect: (value: string) => void }) {
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const [month, setMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
+  const daysInMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+  const leadingDays = (firstDay.getDay() + 6) % 7;
+  const cells = Array.from({ length: leadingDays + daysInMonth }, (_, index) => {
+    if (index < leadingDays) return null;
+    return new Date(month.getFullYear(), month.getMonth(), index - leadingDays + 1);
+  });
+  const lastAllowedMonth = new Date(today.getFullYear(), today.getMonth() + 2, 1);
+  const availableUntil = new Date(today);
+  availableUntil.setDate(availableUntil.getDate() + 45);
+
+  const isAvailable = (date: Date) => {
+    const isSunday = date.getDay() === 0;
+    return date >= today && date <= availableUntil && !isSunday;
+  };
+
+  return (
+    <div className="mt-7">
+      <div className="flex items-center justify-between border-y border-border py-4">
+        <button
+          type="button"
+          aria-label="Mês anterior"
+          disabled={month <= new Date(today.getFullYear(), today.getMonth(), 1)}
+          onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
+          className="flex h-11 w-11 items-center justify-center text-xl text-primary disabled:opacity-25"
+        >
+          ←
+        </button>
+        <p className="font-serif text-xl capitalize">
+          {month.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+        </p>
+        <button
+          type="button"
+          aria-label="Próximo mês"
+          disabled={month >= lastAllowedMonth}
+          onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
+          className="flex h-11 w-11 items-center justify-center text-xl text-primary disabled:opacity-25"
+        >
+          →
+        </button>
+      </div>
+
+      <div className="mt-4 grid grid-cols-7 gap-1 text-center text-[0.62rem] uppercase tracking-[0.12em] text-muted-foreground">
+        {['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'].map((day) => <span key={day} className="py-2">{day}</span>)}
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {cells.map((date, index) => {
+          if (!date) return <span key={`empty-${index}`} className="aspect-square" />;
+          const available = isAvailable(date);
+          return (
+            <button
+              key={date.toISOString()}
+              type="button"
+              disabled={!available}
+              onClick={() => onSelect(formatKey(date))}
+              className={`flex aspect-square items-center justify-center text-sm transition-colors ${available ? "bg-secondary/55 text-foreground hover:bg-primary hover:text-primary-foreground" : "text-muted-foreground/30 line-through"}`}
+              aria-label={formatDate(date)}
+            >
+              {date.getDate()}
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-5 flex items-center gap-4 text-xs text-muted-foreground">
+        <span className="flex items-center gap-2"><i className="h-2 w-2 bg-secondary" />Disponível</span>
+        <span>Domingos indisponíveis</span>
+      </div>
+    </div>
+  );
+}
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+  });
+}
+
+function formatKey(date: Date) {
+  return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, "0"), String(date.getDate()).padStart(2, "0")].join("-");
+}
+
+function formatDateKey(value: string) {
+  if (!value) return "—";
+  return formatDate(new Date(`${value}T12:00:00`));
+}
+
+function isSaturday(value: string) {
+  return value ? new Date(`${value}T12:00:00`).getDay() === 6 : false;
 }
 
 function Summary({ label, value }: { label: string; value: string }) {
